@@ -173,7 +173,7 @@ and_the_winner_is(Board, Player) :-
                             report_winner(Player).
                             
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%  Check if Arg Player has won the game  %
+%  Check if Player has won the game  %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 is_opponent_reduced_to_two_merels_by(Board, Player) :-
                 findall(Point, merel_on_board([Point, Player], Board), Points ),
@@ -181,7 +181,12 @@ is_opponent_reduced_to_two_merels_by(Board, Player) :-
                 other_player(Player, SecondPlayer),
                 findall(Point, merel_on_board([Point, SecondPlayer], Board),Secondpoints),
                 length(Secondpoints, LengthofPlayer2), LengthofPlayer2 < 3.
-  
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%  Check if OtherPlayer has won the game @16.11.2021::7:14PM  %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ is_opponent_reduced_to_two_merels_by(Board, Player) :-
+               other_player(Player, SecondPlayer),
+               is_opponent_reduced_to_two_merels_by(Board, SecondPlayer).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %  checking if there is a legal move for each OldPoint%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -196,7 +201,7 @@ is_there_no_legal_move_for_old_points([], SecondPlayer, Board). %base case after
 %%%%%%%%%%%%%%%%
 is_there_no_legal_move_for_old_points([Point|Points], SecondPlayer, Board) :-
                             findall(NewPoint, connected(Point, NewPoint), Player2LegalMoves),
-                            is_any_connected_point_empty( Player2LegalMoves, Board),   %check if any connected is empty
+                            is_any_connected_point_empty( Player2LegalMoves, Board),   %check if any connected point is empty
                             is_there_no_legal_move_for_old_points(Points, SecondPlayer, Board).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %  check if a connected point is empty
@@ -206,7 +211,7 @@ is_any_connected_point_empty([Point|Points], Board) :-
                                      pair( Pair, Point, _ ),      % a choice here for both players
                                      is_not_empty_merel_at_point(Pair, Board),
                                      is_any_connected_point_empty(Points, Board).
-%is_any_connected_point_empty([Point|Points], Board) :- fail.              % I probably do not need this here. If both choice points fail, it fails
+                                     
 is_not_empty_merel_at_point([Point, Merel], Board) :- merel_on_board([Point, Merel], Board).      %needs to return true
 
 %MAYBE
