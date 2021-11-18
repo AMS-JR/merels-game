@@ -83,44 +83,34 @@ row(c, o, x ).
 % check if two points on the board are connected%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 connected(Arg1, Arg2) :-
+    Arg1 \== Arg2,
     row(X, Y, Z),
     member(Arg1, [X, Y, Z]),
     member(Arg2, [X, Y, Z]),
     nextto(Arg1, Arg2, [X, Y, Z]).
 connected(Arg1, Arg2) :-
+    Arg1 \== Arg2,
     row(X, Y, Z),
     member(Arg1, [X, Y, Z]),
     member(Arg2, [X, Y, Z]),
     nextto(Arg2, Arg1, [X, Y, Z]).
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% FACTS ABOUT ROW AND CONNECTED SO THAT I CAN REFACTOR @17.11.2021::06:07 %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% each square has 8 points.
-% Every other 3 alphabbets are connected with nextto alphabet and are in a horizonal row.
-% Vertical rows are a little tricky
-% There are 8 horizontal rows
-% connected/2 points can be deduced from the rows. Always, the middle point is connected to the other 2 points.
-% Also connected/2 should be implemeted like other_player/2 predicate, meaning Args order should be irrelivant.
-% ACTUALLY A MORE SIMPLE APPROACH WILL BE TO LIST DOWN ALL TH ROWS AND THEN
-% DEFINE A PREDICATE THAT WILL PARSE THOSE ROWS TO DETERMINE IF TWO POINTS ARE CONNECTED.
-
-%%%%%%%%%%%%%%%%%%%%%
-% iniatial state of the board%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-initial_board([]).   % This is where i define the state of the board. Whether it empty or its state at a certain point in the game.
-%initial_board([[a, '1'],[b, '1'],[d, '1'],[u, '2'],[v, '2']]).                %board for and_the_winner_is/2 predicate 1
-%initial_board([[o, '1'],[w, '1'],[n, '1'],[t, '1'],[j, '1'],[x, '2'],[u, '2'],[v, '2']]).       %board for and_the_winner_is/2 predicate 2
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                    iniatial state of the board                                                        %
+% I will assumme it is empty at all times( a new game between players), and not empty only for testing other predicates %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+initial_board([]).
+%initial_board([[a, '1'],[b, '1'],[d, '1'],[u, '2'],[v, '2']]).   %board for and_the_winner_is/2 predicate 1
+%initial_board([[o, '1'],[w, '1'],[n, '1'],[t, '1'],[j, '1'],[x, '2'],[u, '2'],[v, '2']]).   %board for and_the_winner_is/2 predicate 2
 
 %%%%%%%%%%%%%%%
 % emty board  %
 %%%%%%%%%%%%%%%
-board([]).  %TO BE IMPLEMENTED   .or not . could be intial_board([]).->AMS
-%board([pair([X,Y],X,Y)|Pairs]) :- board(Pairs);
+initial_board([]).  %an empty board is an initial_board/1 with and empty [] as Argument
 
-%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % deciding the winner @16.11.2021::19:49%
-%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 and_the_winner_is(Board, Winner) :-
                            is_opponent_reduced_to_two_merels_by(Board, Winner),
                            report_winner( Winner ).
