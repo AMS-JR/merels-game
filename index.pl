@@ -48,7 +48,7 @@ merel_on_board([Point, Merel], [[Point, Merel]|_Tail]).
 merel_on_board([Point, Merel], [_Head|Tail]) :-
     merel_on_board([Point, Merel], Tail).
                                          
-%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %  For any variable to be a point, it must be in the list[a...x]%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 is_point(Point) :- member(Point,[a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x]).
@@ -139,35 +139,25 @@ is_opponent_reduced_to_two_merels_by(Board, Winner) :-
 % points_on_board(Player, Board, CurrentPlayersPoints) :-                         %
 %   findall(Point, merel_on_board([Point, Player], Board), CurrentPlayersPoints ).%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%  checking if there is a legal move for each OldPoint%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%  checking if there is no legal move for each OldPoint %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Checks if all legal moves have merels on the board. If they all have merels, then Current player  %
+% has no moves to make and has lost the game but if this fails, then there is no winner yet.        %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 is_there_no_legal_move_for_old_points([], OtherPlayer, Board). %base case after all points in Points array have been tested and popped off
-%is_there_a_legal_move_for_old_points([Point|Points], OtherPlayer, Board) :-
-%                            findall(NewPoint, get_legal_move(OtherPlayer, Point, NewPoint, Board), Player2LegalMoves),
-%                            length(Player2LegalMoves, Length), Length = 0, % varifies that there is no legal move for the SecondPlayer at a Point
-%                            is_there_a_legal_move_for_old_points(Points, OtherPlayer, Board).
-%%%%%%%%%%%%%%
-% I need to account for only one Point [Point]. A new definition of is_there_no_legal_move_for_old_points([Point], OtherPlayer, Board)
-% I actually do not need to. SINCE [Point] is same as [Point|[]]
-%%%%%%%%%%%%%%%%
 is_there_no_legal_move_for_old_points([Point|Points], OtherPlayer, Board) :-    %Given the points of the OtherPlayer pieces on the board,
                             findall(NewPoint, connected(Point, NewPoint), OtherPlayerLegalMoves), %recursivily find the connected points for each point
-                            is_any_connected_point_empty( OtherPlayerLegalMoves, Board),   %check if any connected point is empty
+                            has_merel( OtherPlayerLegalMoves, Board),   % and check if connected points has merels
                             is_there_no_legal_move_for_old_points(Points, OtherPlayer, Board).
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%  check if a connected point is empty
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-is_any_connected_point_empty([], Board). %base case. If there is no more connected point to test, then return true since this predicate is called by a recursive predicate
-is_any_connected_point_empty([Point|Points], Board) :-
-                                     pair( Pair, Point, _ ),      % a choice here for both players
-                                     is_not_empty_merel_at_point(Pair, Board),
-                                     is_any_connected_point_empty(Points, Board).
-                                     
-is_not_empty_merel_at_point([Point, Merel], Board) :- merel_on_board([Point, Merel], Board).      %needs to return true or false
-
-%MAYBE
-%Board = [a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x].
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%  check if a connected point already has a merel %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+has_merel([], Board). %base case. If there is no more connected point to test, then return true since this predicate is called by a recursive predicate
+has_merel([Point|Points], Board) :-
+                   merel_on_board([Point, _ ], Board),
+                   has_merel(Points, Board).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % A game for 2 human players %
@@ -361,9 +351,10 @@ choose_remove( Player, Point, Board ) :-
 %2. is_there_a_mill/4 and its connected_row_with_member_Point/3 needs evaluation. I need a better way of determining a mill
 %3. BUT choose_remove/3 provided by the lecturer does not account for a point in a mill.
 %4. CHECK if to use version 2 of connected_row_with_member_Point/3 for finding mills
-%4. The problem of using empty_point/2 in io is that Merel is assigned a value befor
+%5. The problem of using empty_point/2 in io is that Merel is assigned a value befor
 %   calling merel_on_board/2, i.e., it test for that Player only before backtracking to
 %   test for other PLayer. But what we want is to call merel_on_board/2 with an
 %   anonymous variable for the Player so that it only looks for a case where one is true
 %   and returns immediatedly if one succeeds. no need to backtrack
+%6. is_point/1 is probably not neccessary and should be remove
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
