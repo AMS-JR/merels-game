@@ -1,57 +1,52 @@
 :- use_module([library(lists), io ]).
 
-%%%%%%%%%%%%%%%
-% Players      %
-%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%
+%    Players   %
+%%%%%%%%%%%%%%%%
  player1('1').
  player2('2').
 
-%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Check if Player is represented %
-%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 is_player1(Player) :- player1(Player).
 is_player2(Player) :- player2(Player).
 
-%%%%%%%%%%%%%%%
-%  Check if merel is a valid player           %
-%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%  Check if merel is a valid player      %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 is_merel(Player) :- is_player1(Player).
 is_merel(Player) :- is_player2(Player).
  
-%%%%%%%%%%%%%%%
-% Args are player representations and different            %
-%%%%%%%%%%%%%%%
-other_player(Arg1, Arg2) :- Arg1 \== Arg2,
-                            is_player1(Arg1),
-                            is_player2(Arg2).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Finding the other Player when One player is Known  %
+% Args are player representations and different      %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+other_player(FirstPlayer, SecondPlayer) :-
+                            is_player1(FirstPlayer),
+                            is_player2(SecondPlayer),
+                            FirstPlayer \== SecondPlayer.
 
-other_player(Arg1, Arg2) :- Arg1 \== Arg2,
-                            is_player1(Arg2),
-                            is_player2(Arg1).
-
-%%%%%%%%%%%%%%%
-% Check if a pair exist in the game  %
-%%%%%%%%%%%%%%%
-pair([Point, Merel], Point, Merel) :- is_point(Point), %->AMS
+other_player(FirstPlayer, SecondPlayer) :-
+                            is_player1(SecondPlayer),
+                            is_player2(FirstPlayer),
+                            FirstPlayer \== SecondPlayer.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Check if a pair is valid and can exist in the game  %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+pair([Point, Merel], Point, Merel) :- is_point(Point), %check if point is a valid point.
                                       is_merel(Merel). %all pair does is pair Point in Arg2 and Merel in Arg3 into Arg1
-
-%%%%%%%%%%%%%%%
-% position of the merel on the board%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%I NEED RE-EVALUATE AGAIN%%%%%%%%%%%%%%%%%%
-merel_on_board([Point, Merel], []) :- false.    %Fail if Board is empty     -> This can be removed since anything not defined is already false.
+%MIGHT BE EASIER JUST USING pair([Point, Merel], Point, Merel). REVIEW LATER->AMS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% position of the merel on the board       %
+% Argument 2 is assumed to be instantiated %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+merel_on_board([Point, Merel], []) :- false.    %Fail if Board is empty. This can be removed since anything not defined is already false. ->AMS
 
 merel_on_board([Point, Merel], [[Point, Merel]|_Tail]).
 
 merel_on_board([Point, Merel], [_Head|Tail]) :-
     merel_on_board([Point, Merel], Tail).
-    
-%merel_on_board([Point, Merel], Board) :- ground(Board), % Board is basically the position of the merel .Maybe not
-%                                         is_point(Point),
-%                                         is_merel(Merel). %->AMS
-                                         
-%merel_on_board([Point, Merel], Board) :- ground(Board), % Board is basically the position of the merel
-%                                     pair([Point, Merel], Point, Merel).               %extension->AMS.
                                          
 %%%%%%%%%%%%%%%%%%%%%
 %  For any variable to be a point, it must be in the list[a...x]%
@@ -99,24 +94,27 @@ connected(Arg1, Arg2) :-
 %                                    iniatial state of the board                                                        %
 % I will assumme it is empty at all times( a new game between players), and not empty only for testing other predicates %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-initial_board([]).
+%initial_board(Board).
+ initial_board([]).               %board for the play/3 predicate between two players.
 %initial_board([[a, '1'],[b, '1'],[d, '1'],[u, '2'],[v, '2']]).   %board for and_the_winner_is/2 predicate 1
 %initial_board([[o, '1'],[w, '1'],[n, '1'],[t, '1'],[j, '1'],[x, '2'],[u, '2'],[v, '2']]).   %board for and_the_winner_is/2 predicate 2
 
-%%%%%%%%%%%%%%%
-% emty board  %
-%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%      emty board                                          %
+% am using initial_board/1 here since it makes life easier %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 initial_board([]).  %an empty board is an initial_board/1 with and empty [] as Argument
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % deciding the winner @16.11.2021::19:49%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Opponent is reduced to two merels by winner
 and_the_winner_is(Board, Winner) :-
                            is_opponent_reduced_to_two_merels_by(Board, Winner),
                            report_winner( Winner ).
 
-%need to confirm if
-and_the_winner_is(Board, Winner) :-        % block opponent so that he has no legal moves
+%Opponent merels have been blocked and has no legal moves to make
+and_the_winner_is(Board, Winner) :-
                             is_merel(Winner),
                             other_player(Winner, OtherPlayer),
                             findall(Point, merel_on_board([Point, OtherPlayer], Board), OtherPlayerOldPoints ), %find all existing Points with OtherPlayer as Merel on the board
@@ -124,7 +122,7 @@ and_the_winner_is(Board, Winner) :-        % block opponent so that he has no le
                             report_winner(Winner).
                             
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%  Check if Player has won the game  %
+%  Check if a Player has won the game  %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 is_opponent_reduced_to_two_merels_by(Board, Winner) :-
                 is_merel(Winner),
@@ -133,13 +131,14 @@ is_opponent_reduced_to_two_merels_by(Board, Winner) :-
                 other_player(Winner, SecondPlayer),
                 findall(Point, merel_on_board([Point, SecondPlayer], Board),Secondpoints),
                 length(Secondpoints, LengthofPlayer2), LengthofPlayer2 < 3.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%  Check if OtherPlayer has won the game @16.11.2021::7:14PM  %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-/*is_opponent_reduced_to_two_merels_by(Board, Winner) :-
-               is_player2(Looser).
-               other_player(Looser, Winner),
-               is_opponent_reduced_to_two_merels_by(Board, Winner).*/
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%  Find all the points on the board for the current player                        %
+% is same function for points_on_board() and should return the                    %
+% same result and this is probably even easier. I need to confirm                 %
+% it won't break my code. I can replace both findall with                         %
+% points_on_board(Player, Board, CurrentPlayersPoints) :-                         %
+%   findall(Point, merel_on_board([Point, Player], Board), CurrentPlayersPoints ).%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %  checking if there is a legal move for each OldPoint%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
