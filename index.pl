@@ -77,18 +77,18 @@ row(c, o, x ).
 %%%%%%%%%%%%%%%%%%%
 % check if two points on the board are connected%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-connected(Arg1, Arg2) :-
-    Arg1 \== Arg2,
+connected(Point1, Point2) :-
+    Point1 \== Point2,
     row(X, Y, Z),
-    member(Arg1, [X, Y, Z]),
-    member(Arg2, [X, Y, Z]),
-    nextto(Arg1, Arg2, [X, Y, Z]).
-connected(Arg1, Arg2) :-
-    Arg1 \== Arg2,
+    member(Point1, [X, Y, Z]),
+    member(Point2, [X, Y, Z]),
+    nextto(Point1, Point2, [X, Y, Z]).
+connected(Point1, Point2) :-
+    Point1 \== Point2,
     row(X, Y, Z),
-    member(Arg1, [X, Y, Z]),
-    member(Arg2, [X, Y, Z]),
-    nextto(Arg2, Arg1, [X, Y, Z]).
+    member(Point1, [X, Y, Z]),
+    member(Point2, [X, Y, Z]),
+    nextto(Point2, Point1, [X, Y, Z]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                                    iniatial state of the board                                                        %
