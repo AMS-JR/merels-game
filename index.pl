@@ -34,6 +34,7 @@ other_player(FirstPlayer, SecondPlayer) :-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Check if a pair is valid and can exist in the game  %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%all pair does is pair Point in Arg2 and Merel in Arg3 into Arg1
 pair([Point, Merel], Point, Merel) :- is_point(Point), %check if point is a valid point.
                                       is_merel(Merel). %all pair does is pair Point in Arg2 and Merel in Arg3 into Arg1
 %MIGHT BE EASIER JUST USING pair([Point, Merel], Point, Merel). REVIEW LATER->AMS
@@ -45,7 +46,8 @@ merel_on_board([_Point, _Merel], []) :- false.    %Fail if Board is empty. This 
 
 merel_on_board([Point, Merel ], [[Point, Merel ]|_Tail]):-
              is_merel(Merel).
-
+merel_on_board([Point, Merel ], [[Point, _ ]|_Tail]):-
+             is_merel(Merel).
 merel_on_board([Point, Merel], [_Head|Tail]) :-
     merel_on_board([Point, Merel], Tail).
 
