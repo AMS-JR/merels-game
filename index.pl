@@ -41,7 +41,7 @@ pair([Point, Merel], Point, Merel) :- is_point(Point), %check if point is a vali
 % position of the merel on the board       %
 % Argument 2 is assumed to be instantiated %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-merel_on_board([Point, Merel], []) :- false.    %Fail if Board is empty. This can be removed since anything not defined is already false. ->AMS
+merel_on_board([_Point, _Merel], []) :- false.    %Fail if Board is empty. This can be removed since anything not defined is already false. ->AMS
 
 merel_on_board([Point, Merel], [[Point, Merel]|_Tail]).
 
@@ -146,7 +146,7 @@ is_opponent_reduced_to_two_merels_by(Board, Winner) :-
 % Checks if all legal moves have merels on the board. If they all have merels, then Current player  %
 % has no moves to make and has lost the game but if this fails, then there is no winner yet.        %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-is_there_no_legal_move_for_old_points([], OtherPlayer, Board). %base case after all points in Points array have been tested and popped off
+is_there_no_legal_move_for_old_points([], _OtherPlayer, _Board). %base case after all points in Points array have been tested and popped off
 is_there_no_legal_move_for_old_points([Point|Points], OtherPlayer, Board) :-    %Given the points of the OtherPlayer pieces on the board,
                             findall(NewPoint, connected(Point, NewPoint), OtherPlayerLegalMoves), %recursivily find the connected points for each point
                             has_merel( OtherPlayerLegalMoves, Board),   % and check if connected points has merels
@@ -154,7 +154,7 @@ is_there_no_legal_move_for_old_points([Point|Points], OtherPlayer, Board) :-    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %  check if a connected point already has a merel %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-has_merel([], Board). %base case. If there is no more connected point to test, then return true since this predicate is called by a recursive predicate
+has_merel([], _Board). %base case. If there is no more connected point to test, then return true since this predicate is called by a recursive predicate
 has_merel([Point|Points], Board) :-
                    merel_on_board([Point, _ ], Board),
                    has_merel(Points, Board).
@@ -174,11 +174,10 @@ play :- welcome,
 % play/3 possible predicates %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %All merels have been placed.
-play(0, Player, Board) :-
+play(0, _Player, Board) :-
          and_the_winner_is(Board, Winner), %board represents a winning state
          display_board( Board ),  %DISPLAY_BOARD
          report_winner( Winner ).%REPORT_WINNER
-         %play(TODO, TODO, TODO).
 %Not all merels have been placed.
 /*code for section 3.6 @16.11.2021::19:49  */
 /*play(MerelsInHand, Player, Board) :-
@@ -207,13 +206,13 @@ play(0, Player, Board) :-
 is_there_a_mill(Point, Player, Board, NewBoard) :-
        points_on_board(Player, Board, CurrentPlayersPoints), %current players Points on the Board
        length(CurrentPlayersPoints, Length), Length > 2,                %If Total Pieces of Current Player on the Board is not more than 2, there cannot be a mill
-       connected_row_with_member_Point(Point, CurrentPlayersPoints, ConnectedPair), % a connected row in the current players points with Point as a member
+       connected_row_with_member_Point(Point, CurrentPlayersPoints, _ConnectedPair), % a connected row in the current players points with Point as a member
  %     findall([_,_,_],row(_,_,_), Mill),
        report_mill( Player ),      %reporting the new mill
        display_board( Board ),  %DISPLAY_BOARD so current player can easily make a choice on what piece to remove
        get_and_remove_point(Player, Board, NewBoard).
        
-is_there_a_mill(Point, Player, Board, Board).    %If first is_there_a_mill/4 predicate fails, call this to unify CurrentBoard and NewBoard in play/3.
+is_there_a_mill(_Point, _Player, Board, Board).    %If first is_there_a_mill/4 predicate fails, call this to unify CurrentBoard and NewBoard in play/3.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %  Find all the Current Players' points on the Board %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -245,9 +244,10 @@ get_and_remove_point(Player, Board, NewBoard) :-
 move_merel(Player, OldPoint, NewPoint, Board, CurrentBoard) :-
         subtract(Board, [[OldPoint, Player]], UpdatedBoard),%MOVE_MEREL_TO_NEWPOINT -> REMOVE_MEREL_FROM_OLDPOINT
         append(UpdatedBoard, [[NewPoint, Player]], CurrentBoard).   %MOVE_MEREL_TO_NEWPOINT -> ADD_MEREL_TO_NEWPOINT
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Running a game for 1 human and the computer@17.11.2021::07:09
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Running a game for 1 human and the computer@17.11.2021::07:09  %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%play/3 of placing a merel with Player 1 being the current player
 play(MerelsInHand, Player, Board) :-
         \+ (Player = '2'), %PLAYER_1_IS_CURRENT? IF_NOT FAIL  --- (Can i just put '1' in Arg Player?)
         \+ (MerelsInHand = 0),  %Fail, if MerelsInHand = 0 so that other play/3 predicates will execute
@@ -256,7 +256,6 @@ play(MerelsInHand, Player, Board) :-
         report_move( Player, Point ), %REPORT_PLACING  ---(Not really neccessary. Computer doesn't care)
         is_there_a_mill(Point, Player, CurrentBoard, NewBoard ),%LOOK_FOR_NEW_MILLS IF_EXISTS -> REPORT_MILL GET_REMOVE_POINT
         display_board( NewBoard ),  %DISPLAY_BOARD
-        other_player(Player, OtherPlayer),  %OTHER_PLAYER
         MerelsRemainingInHand is MerelsInHand-1,   %MERELS_REMAINING_IN_HAND
         play(MerelsRemainingInHand , '2', NewBoard). %play(MERELS_REMAINING_IN_HAND, OTHER_PLAYER, NEW_BOARD)
 %play/3 of placing a merel with Player 2 being the current player
@@ -297,14 +296,14 @@ play(0, Player, Board) :-
 check_mill(Point, Player, Board, NewBoard) :-
        points_on_board(Player, Board, CurrentPlayersPoints), %current players Points on the Board
        length(CurrentPlayersPoints, Length), Length > 2,                %If Total Pieces of Current Player on the Board is not more than 2, there cannot be a mill
-       connected_row_with_member_Point(Point, CurrentPlayersPoints, ConnectedPair), % a connected row in the current players points with Point as a member
+       connected_row_with_member_Point(Point, CurrentPlayersPoints, _ConnectedPair), % a connected row in the current players points with Point as a member
        report_mill( Player ),      %reporting the new mill
        display_board( Board ),  %DISPLAY_BOARD so current player can easily make a choice on what piece to remove
        choose_remove(Player, PointToRemove, Board), %Choose a point to remove on the Board
        subtract(Board, [[PointToRemove, '1']], NewBoard), %remove a piece of the other player.
        report_remove( Player, PointToRemove ). %report the point removed
        
-check_mill(Point, Player, Board, Board).    %If first check_mill/4 predicate fails, call this to unify CurrentBoard and NewBoard in play/3.
+check_mill(_Point, _Player, Board, Board).    %If first check_mill/4 predicate fails, call this to unify CurrentBoard and NewBoard in play/3.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % dumbly choose a point. Succeeds when it can find a place to put a new merel.          %
 % choose_place/3 can have different versions, one for each heuristic @DD.MM.YYYY::HH:MM %
