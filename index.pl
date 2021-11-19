@@ -179,7 +179,7 @@ play(0, _Player, Board) :-
          report_winner( Winner ).%REPORT_WINNER
 %Not all merels have been placed.
 /*code for section 3.6 @16.11.2021::19:49  */
-play(MerelsInHand, Player, Board) :-
+/*play(MerelsInHand, Player, Board) :-
         \+ (MerelsInHand = 0),  %Fail, if MerelsInHand = 0 so that other play/3 predicates will execute
         get_legal_place( Player, Point, Board ),  %GET_LEGAL_PLACING( +Player, -Point, +Board)
         append([[Point, Player]], Board, CurrentBoard), %ADD_THE_NEW_PAIR_IN_THE_BOARD
@@ -198,7 +198,7 @@ play(0, Player, Board) :-
         display_board( NewBoard ),   %DISPLAY_BOARD
         other_player(Player, OtherPlayer),  %OTHER_PLAYER
         play(0, OtherPlayer, NewBoard).
-%*/
+*/
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Look for a mill, report it and remove Other players piece %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
