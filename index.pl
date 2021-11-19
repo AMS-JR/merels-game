@@ -47,7 +47,7 @@ merel_on_board([_Point, _Merel], []) :- false.    %Fail if Board is empty. This 
 merel_on_board([Point, Merel ], [[Point, Merel ]|_Tail]):-
              is_merel(Merel).
 merel_on_board([Point, Merel ], [[Point, _ ]|_Tail]):-
-             is_merel(Merel).
+             is_player1(Merel).
 merel_on_board([Point, Merel], [_Head|Tail]) :-
     merel_on_board([Point, Merel], Tail).
 
@@ -120,7 +120,7 @@ and_the_winner_is(Board, Winner) :-
 and_the_winner_is(Board, Winner) :-
                             is_merel(Winner),
                             other_player(Winner, OtherPlayer),
-                            findall(Point, merel_on_board([Point, OtherPlayer], Board), OtherPlayerOldPoints ), %find all existing Points with OtherPlayer as Merel on the board
+                            findall(Point, member([Point, OtherPlayer], Board), OtherPlayerOldPoints ), %find all existing Points with OtherPlayer as Merel on the board
                             is_there_no_legal_move_for_old_points(OtherPlayerOldPoints, OtherPlayer, Board), % Check that OtherPlayer has no legal moves to make
                             report_winner(Winner).
                             
@@ -129,10 +129,10 @@ and_the_winner_is(Board, Winner) :-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 is_opponent_reduced_to_two_merels_by(Board, Winner) :-
                 is_merel(Winner),
-                findall(Point, merel_on_board([Point, Winner], Board), Points ),
+                findall(Point, member([Point, Winner], Board), Points ),
                 length(Points, Length), Length > 2,
                 other_player(Winner, SecondPlayer),
-                findall(Point, merel_on_board([Point, SecondPlayer], Board),Secondpoints),
+                findall(Point, member([Point, SecondPlayer], Board),Secondpoints),
                 length(Secondpoints, LengthofPlayer2), LengthofPlayer2 < 3.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Find all the points on the board for the current player                         %
@@ -155,7 +155,7 @@ is_there_no_legal_move_for_old_points([Point|Points], OtherPlayer, Board) :-    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 has_merel([], _Board). %base case. If there is no more connected point to test, then return true since this predicate is called by a recursive predicate
 has_merel([Point|Points], Board) :-
-                   merel_on_board([Point, _ ], Board),
+                   member([Point, _ ], Board),          %EXCEPTION HERE IS THAT I CAN USE merel_on_board/2 here since merel Param. is anonymous
                    has_merel(Points, Board).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -241,10 +241,10 @@ get_and_remove_point(Player, Board, NewBoard) :-
 % the other player if PointToRemove is not in a mill. We cannot remove points in a mill %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 remove_if_not_in_mill(Player, PointToRemove, OtherPlayer, OtherPlayersPoints, Board, NewBoard) :-
-          \+ (merel_on_board([PointToRemove, Player], Board)), % A player should not remove their own points. Is this really important?? or address this differently later
-          \+ (a_mill_with_member_Point(PointToRemove, OtherPlayersPoints, ConnectedPair)), % the point to remove should not be in a mill
+          \+ (member([PointToRemove, Player], Board)), % A player should not remove their own points. Is this really important?? or address this differently later
+          \+ (a_mill_with_member_Point(PointToRemove, OtherPlayersPoints, _ConnectedPair)), % the point to remove should not be in a mill
           subtract(Board, [[PointToRemove, OtherPlayer]], NewBoard). %remove a piece of the other player.
-remove_if_not_in_mill(Player, PointToRemove, OtherPlayer, OtherPlayersPoints, Board, NewBoard) :-
+remove_if_not_in_mill(Player, _PointToRemove, OtherPlayer, _OtherPlayersPoints, Board, NewBoard) :-
           other_player(Player, OtherPlayer),
           format( '\nThat piece cannot be removed. Please remove another piece.\n', [] ),%REPORT THAT YOU CAN NOT REMOVE PIECE
           get_and_remove_point(Player, Board, NewBoard).
@@ -325,8 +325,7 @@ check_mill(_Point, _Player, Board, Board).    %If first check_mill/4 predicate f
 %The last choose_place/3 predicate. _Player = Player, only that we say it appears only once by adding _
 choose_place( _Player, Point, Board ) :-
          connected( Point, _ ),
-         \+ merel_on_board( [Point, _ ], Board).
-         %empty_point( Point, Board ).
+         empty_point( Point, Board ).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % dumbly choose a move. Succeeds when it can find a merel to move and a place to move it to. %
 % choose_move/3 can have different versions, one for each heuristic @DD.MM.YYYY::HH:MM       %
@@ -340,8 +339,7 @@ choose_move( Player, OldPoint, NewPoint, Board ) :-
        pair( Pair, OldPoint, Player ),
        merel_on_board( Pair, Board ),
        connected( OldPoint, NewPoint ),
-       \+ merel_on_board( [NewPoint, _ ], Board).
-       %empty_point( NewPoint, Board ).
+       empty_point( NewPoint, Board ).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % dumbly choose a removal. Succeeds when it can find a merel to remove.                      %
 % choose_remove/4 can have different versions, one for each heuristic @DD.MM.YYYY::HH:MM     %
