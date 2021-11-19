@@ -43,7 +43,7 @@ pair([Point, Merel], Point, Merel) :- is_point(Point), %check if point is a vali
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 merel_on_board([_Point, _Merel], []) :- false.    %Fail if Board is empty. This can be removed since anything not defined is already false. ->AMS
 
-merel_on_board([Point, Merel], [[Point, Merel]|_Tail]).
+merel_on_board([Point, Merel], [[Point, _ ]|_Tail]).
 
 merel_on_board([Point, Merel], [_Head|Tail]) :-
     merel_on_board([Point, Merel], Tail).
@@ -132,12 +132,11 @@ is_opponent_reduced_to_two_merels_by(Board, Winner) :-
                 findall(Point, merel_on_board([Point, SecondPlayer], Board),Secondpoints),
                 length(Secondpoints, LengthofPlayer2), LengthofPlayer2 < 3.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%  Find all the points on the board for the current player                        %
+% Find all the points on the board for the current player                         %
 % is same function for points_on_board() and should return the                    %
-% same result and this is probably even easier. I need to confirm                 %
-% it won't break my code. I can replace both findall with                         %
-% points_on_board(Player, Board, CurrentPlayersPoints) :-                         %
-%   findall(Point, merel_on_board([Point, Player], Board), CurrentPlayersPoints ).%
+% same result. I need to confirm it won't break my code. points_on_board/3 is     %
+% actualy way more easier and straigtforward since it is using member/2.          %
+% I can replace both findall here with points_on_board/3                          %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % checking if there is no legal move for each OldPoint i.e., if all legal moves have merels on the board. If they all have merels, %
@@ -166,7 +165,7 @@ play :- welcome,
         initial_board( Board ),
         display_board( Board ),
         is_player1( Player ),
-        play( 6, Player, Board ).
+        play( 18, Player, Board ).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % play/3 possible predicates %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -177,7 +176,7 @@ play(0, _Player, Board) :-
          report_winner( Winner ).%REPORT_WINNER
 %Not all merels have been placed.
 /*code for section 3.6 @16.11.2021::19:49  */
-/*play(MerelsInHand, Player, Board) :-
+play(MerelsInHand, Player, Board) :-
         \+ (MerelsInHand = 0),  %Fail, if MerelsInHand = 0 so that other play/3 predicates will execute
         get_legal_place( Player, Point, Board ),  %GET_LEGAL_PLACING( +Player, -Point, +Board)
         append([[Point, Player]], Board, CurrentBoard), %ADD_THE_NEW_PAIR_IN_THE_BOARD
@@ -196,15 +195,14 @@ play(0, Player, Board) :-
         display_board( NewBoard ),   %DISPLAY_BOARD
         other_player(Player, OtherPlayer),  %OTHER_PLAYER
         play(0, OtherPlayer, NewBoard).
-*/
-%%%%%%%%%%%%%%%%%%%%%%
-% Look for a mill, report it and remove OTher players piece
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%*/
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Look for a mill, report it and remove Other players piece %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 is_there_a_mill(Point, Player, Board, NewBoard) :-
        points_on_board(Player, Board, CurrentPlayersPoints), %current players Points on the Board
        length(CurrentPlayersPoints, Length), Length > 2,                %If Total Pieces of Current Player on the Board is not more than 2, there cannot be a mill
-       connected_row_with_member_Point(Point, CurrentPlayersPoints, _ConnectedPair), % a connected row in the current players points with Point as a member
- %     findall([_,_,_],row(_,_,_), Mill),
+       a_mill_with_member_Point(Point, CurrentPlayersPoints, _ConnectedPair), % a connected row in the current players points with Point as a member
        report_mill( Player ),      %reporting the new mill
        display_board( Board ),  %DISPLAY_BOARD so current player can easily make a choice on what piece to remove
        get_and_remove_point(Player, Board, NewBoard).
@@ -215,16 +213,16 @@ is_there_a_mill(_Point, _Player, Board, Board).    %If first is_there_a_mill/4 p
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 points_on_board(Player, Board, CurrentPlayersPoints) :-
       findall(NewPoint,(pair(Pair,NewPoint, Player), member(Pair,Board)), CurrentPlayersPoints). %current players Points on the Board
-%%%%%%%%%%%%%%%%%%%%%%
-% Finding a connected row containing the New point as a member
-%%%%%%%%%%%%%%%%%%%%%%%
-%CAN I ACCOUNT FOR A SINGLE PLAY WHICH PRODUCES 2 MILLS? I MUST FIND A WAY OF IMPROVING THIS PREDICATE!!!!!  MAYBE_NOT
-connected_row_with_member_Point(Point, CurrentPlayersPoints, ConnectedPair) :-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Finding a mill with Point as a member %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%CAN I ACCOUNT FOR A SINGLE PLAY WHICH PRODUCES 2 MILLS?? I MUST FIND A WAY OF IMPROVING THIS PREDICATE!!!!!  MAYBE NOT
+a_mill_with_member_Point(Point, CurrentPlayersPoints, ConnectedPair) :-
         row(X,Y,Z),
         subset([X,Y,Z], CurrentPlayersPoints),
         member(Point,[X,Y,Z]),
         ConnectedPair = [X,Y,Z].
-%VERSION of connected_row_with_member_Point/3 TO BE USE??
+%VERSION of a_mill_with_member_Point/3 TO BE USE?? OR AVOID FINDALL ALTOGETHER
 %findall(MillPoint, (row(X,Y,Z),subset([X,Y,Z], CurrentPlayersPoints), member(Point,[X,Y,Z]),member(MillPoint,[X,Y,Z])), MillPoints).
 %%%%%%%%%%%%%%%%%%%%%%
 % Get and remove a piece of the Other player
@@ -232,9 +230,40 @@ connected_row_with_member_Point(Point, CurrentPlayersPoints, ConnectedPair) :-
 get_and_remove_point(Player, Board, NewBoard) :-
         get_remove_point( Player, PointToRemove, Board),
         other_player(Player, OtherPlayer),
-        subtract(Board, [[PointToRemove, OtherPlayer]], NewBoard), %remove a piece of the other player.
+        points_on_board(OtherPlayer, Board, OtherPlayersPoints), %find the points of OtherPlayer on the board
+        %points_in_mill(OtherPlayersPoints , OtherPlayersPoints, OtherPlayer, PointsInMill), %-AMS
+        remove_if_not_in_mill(PointToRemove, OtherPlayer, OtherPlayersPoints, Board, NewBoard), %->AMS
+        %subtract(Board, [[PointToRemove, OtherPlayer]], NewBoard), %remove a piece of the other player.
         report_remove( Player, PointToRemove ).                           %report remove.
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Find all of the current players points that are in a mill and hence cannot be removed.%
+% This is different from a_mill_with_member_Point/3 where i found if there is a mill    %
+% point connected to the new Point the player placed a piece on or moved a piece to.    %
+% HERE AM ASSUMING THE OTHER PLAYER COULD HAVE ONE OR TWO MILLS ON THE BOARD ALREADY AND%
+% AM FINDING THOSE POINTS. THESE POINTS CANNOT BE REMOVED SINCE THEY ARE IN A MILL      %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+/*points_in_mill([Point|OtherPoints], OtherPlayersPoints, OtherPlayer, PointsInMill) :-
+        row(X,Y,Z),
+        member(Point,[X,Y,Z]),
+        subset([X,Y,Z], OtherPlayersPoints),
+        \+ member(PointToRemove,[X,Y,Z]),
+        %append([X,Y,Z],PointsInMill),
+        points_in_mill(OtherPoints, OtherPlayersPoints, OtherPlayer, PointsInMill).*/
+%points_in_mill(OtherPlayersPoints, OtherPlayersPoints, OtherPlayer, []). %no points in mill for the OtherPlayer
+%recursively add unique points in PointsInMill
+/*add_points_in([Head|Tail],PointsInMill) :-
+         \+ member(Head,PointsInMill),
+         append(Head,PointsInMill),
+         add_points_in(Tail,PointsInMill). */
+%
+remove_if_not_in_mill(PointToRemove, OtherPlayer, OtherPlayersPoints, Board, NewBoard) :-
+           \+ (a_mill_with_member_Point(PointToRemove, OtherPlayersPoints, ConnectedPair)), % the point to remove should not be in a mill
+          %\+ (Point_To_Remove_in_mill()), % the point to remove should not be in a mill
+          subtract(Board, [[PointToRemove, OtherPlayer]], NewBoard). %remove a piece of the other player.
+remove_if_not_in_mill(PointToRemove, OtherPlayer, OtherPlayersPoints, Board, NewBoard) :-
+          other_player(Player, OtherPlayer),
+          %REPORT THAT YOU CAN NOT REMOVE PIECE
+          get_and_remove_point(Player, Board, NewBoard).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Move a merel from OldPoint to NewPoint. %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -245,7 +274,7 @@ move_merel(Player, OldPoint, NewPoint, Board, CurrentBoard) :-
 % Running a game for 1 human and the computer@17.11.2021::07:09  %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %play/3 of placing a merel with Player 1 being the current player
-play(MerelsInHand, Player, Board) :-
+/*play(MerelsInHand, Player, Board) :-
         \+ (Player = '2'), %PLAYER_1_IS_CURRENT? IF_NOT FAIL  --- (Can i just put '1' in Arg Player?)
         \+ (MerelsInHand = 0),  %Fail, if MerelsInHand = 0 so that other play/3 predicates will execute
         get_legal_place( Player, Point, Board ),  %GET_LEGAL_PLACING( +Player, -Point, +Board)
@@ -283,7 +312,7 @@ play(0, Player, Board) :-
         check_mill(NewPoint, Player, CurrentBoard, NewBoard),  %LOOK_FOR_NEW_MILLS IF_EXISTS -> REPORT_MILL GET_AND_REMOVE_POINT
         display_board( NewBoard ),  %DISPLAY_BOARD
         play(0, '1', NewBoard). %play(MERELS_REMAINING_IN_HAND, OTHER_PLAYER, NEW_BOARD)
-        
+ */
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % check_mill/4 is for Player 2 or the computer
 % check if there is a new mill @DD.MM.YYYY::HH:MM
@@ -293,7 +322,7 @@ play(0, Player, Board) :-
 check_mill(Point, Player, Board, NewBoard) :-
        points_on_board(Player, Board, CurrentPlayersPoints), %current players Points on the Board
        length(CurrentPlayersPoints, Length), Length > 2,                %If Total Pieces of Current Player on the Board is not more than 2, there cannot be a mill
-       connected_row_with_member_Point(Point, CurrentPlayersPoints, _ConnectedPair), % a connected row in the current players points with Point as a member
+       a_mill_with_member_Point(Point, CurrentPlayersPoints, _ConnectedPair), % a connected row in the current players points with Point as a member
        report_mill( Player ),      %reporting the new mill
        display_board( Board ),  %DISPLAY_BOARD so current player can easily make a choice on what piece to remove
        choose_remove(Player, PointToRemove, Board), %Choose a point to remove on the Board
@@ -346,11 +375,10 @@ choose_remove( Player, Point, Board ) :-
 %1. get_and_remove_point/2 should not remove a point in a mill.
 %2. is_there_a_mill/4 and its connected_row_with_member_Point/3 needs evaluation. I need a better way of determining a mill
 %3. BUT choose_remove/3 provided by the lecturer does not account for a point in a mill.
-%4. CHECK if to use version 2 of connected_row_with_member_Point/3 for finding mills
-%5. The problem of using empty_point/2 in io is that Merel is assigned a value befor
+%4. The problem of using empty_point/2 in io is that Merel is assigned a value befor
 %   calling merel_on_board/2, i.e., it test for that Player only before backtracking to
 %   test for other PLayer. But what we want is to call merel_on_board/2 with an
 %   anonymous variable for the Player so that it only looks for a case where one is true
 %   and returns immediatedly if one succeeds. no need to backtrack
-%6. is_point/1 is probably not neccessary and should be remove
+%5. is_point/1 is probably not neccessary and should be remove
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
