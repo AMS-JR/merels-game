@@ -81,13 +81,13 @@ connected(Point1, Point2) :-
     Point1 \== Point2,
     row(X, Y, Z),
     %member(Point1, [X, Y, Z]),  %removing these
-    %member(Point2, [X, Y, Z]),  % makes no difference to the response
+    %member(Point2, [X, Y, Z]),  % makes no difference to the result
     nextto(Point1, Point2, [X, Y, Z]).
 connected(Point1, Point2) :-
     Point1 \== Point2,
     row(X, Y, Z),
     %member(Point1, [X, Y, Z]),   %removing these
-    %member(Point2, [X, Y, Z]),   % makes no difference to the response
+    %member(Point2, [X, Y, Z]),   % makes no difference to the result
     nextto(Point2, Point1, [X, Y, Z]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
