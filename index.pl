@@ -74,9 +74,9 @@ row(i, m, r ).
 row(f, n, u ).
 row(c, o, x ).
 
-%%%%%%%%%%%%%%%%%%%
-% check if two points on the board are connected%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% check if two points on the board are connected %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 connected(Point1, Point2) :-
     Point1 \== Point2,
     row(X, Y, Z),
