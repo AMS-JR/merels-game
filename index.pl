@@ -359,28 +359,6 @@ choose_remove( Player, Point, Board ) :-
 choose_remove( Player, Point, Board ) :- %CHECK THIS AGAIN, IT SEEMS LIKE Player should be passed OtherPlayer ->AMS
        pair( Pair, Point, Player ),
        merel_on_board( Pair, Board ).
-
-%%%%%%%%%%%%%%%%%%%%%%
-% Get and remove a piece of the Other player
-%%%%%%%%%%%%%%%%%%%%%%%
-get_and_remove_point(Player, Board, NewBoard) :-
-        get_remove_point( Player, PointToRemove, Board),
-        other_player(Player, OtherPlayer),
-        points_on_board(OtherPlayer, Board, OtherPlayersPoints), %find the points of OtherPlayer on the board
-        remove_if_not_in_mill(Player, PointToRemove, OtherPlayer, OtherPlayersPoints, Board, NewBoard), %->AMS
-        report_remove( Player, PointToRemove ).                           %report remove.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Remove the merel on PointToRemove chosen by current player for the merel points of    %
-% the other player if PointToRemove is not in a mill. We cannot remove points in a mill %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-remove_if_not_in_mill(Player, PointToRemove, OtherPlayer, OtherPlayersPoints, Board, NewBoard) :-
-          \+ (member([PointToRemove, Player], Board)), % A player should not remove their own points. Is this really important?? or address this differently later
-          \+ (a_mill_with_member_Point(PointToRemove, OtherPlayersPoints, _ConnectedPair)), % the point to remove should not be in a mill
-          subtract(Board, [[PointToRemove, OtherPlayer]], NewBoard). %remove a piece of the other player.
-remove_if_not_in_mill(Player, _PointToRemove, OtherPlayer, _OtherPlayersPoints, Board, NewBoard) :-
-          other_player(Player, OtherPlayer),
-          format( '\nThat piece cannot be removed. Please remove another piece.\n', [] ),%REPORT THAT YOU CAN NOT REMOVE PIECE
-          get_and_remove_point(Player, Board, NewBoard).
        
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % NOTE TO SELF: AVOID USING merel_on_board/2 IN MY CODE. RATHER USE member(+list,+listOfList) %
