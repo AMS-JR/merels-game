@@ -43,11 +43,14 @@ pair([Point, Merel], Point, Merel) :- is_point(Point), %check if point is a vali
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 merel_on_board([_Point, _Merel], []) :- false.    %Fail if Board is empty. This can be removed since anything not defined is already false. ->AMS
 
-merel_on_board([Point, Merel], [[Point, _ ]|_Tail]).
+merel_on_board([Point, Merel ], [[Point, Merel ]|_Tail]).
+
+merel_on_board([Point, Merel], [[Point, _ ]|_Tail]).     % a hack. REVIEW LATER -> AMS
 
 merel_on_board([Point, Merel], [_Head|Tail]) :-
     merel_on_board([Point, Merel], Tail).
-                                         
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %  For any variable to be a point, it must be in the list[a...x]%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
