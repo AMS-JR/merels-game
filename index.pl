@@ -43,13 +43,11 @@ pair([Point, Merel], Point, Merel) :- is_point(Point), %check if point is a vali
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 merel_on_board([_Point, _Merel], []) :- false.    %Fail if Board is empty. This can be removed since anything not defined is already false. ->AMS
 
-merel_on_board([Point, Merel ], [[Point, Merel ]|_Tail]).
-
-merel_on_board([Point, Merel], [[Point, _ ]|_Tail]).     % a hack. REVIEW LATER -> AMS
+merel_on_board([Point, Merel ], [[Point, Merel ]|_Tail]):-
+             is_merel(Merel).
 
 merel_on_board([Point, Merel], [_Head|Tail]) :-
     merel_on_board([Point, Merel], Tail).
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %  For any variable to be a point, it must be in the list[a...x]%
@@ -103,7 +101,7 @@ connected(Point1, Point2) :-
 %initial_board([[o, '1'],[w, '1'],[n, '1'],[t, '1'],[j, '1'],[x, '2'],[u, '2'],[v, '2']]).   %board for and_the_winner_is/2 predicate 2
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%      emty board                                          %
+%                     emty board                           %
 % am using initial_board/1 here since it makes life easier %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 initial_board([]).  %an empty board is an initial_board/1 with and empty [] as Argument
@@ -234,38 +232,19 @@ get_and_remove_point(Player, Board, NewBoard) :-
         get_remove_point( Player, PointToRemove, Board),
         other_player(Player, OtherPlayer),
         points_on_board(OtherPlayer, Board, OtherPlayersPoints), %find the points of OtherPlayer on the board
-        %points_in_mill(OtherPlayersPoints , OtherPlayersPoints, OtherPlayer, PointsInMill), %-AMS
-        remove_if_not_in_mill(PointToRemove, OtherPlayer, OtherPlayersPoints, Board, NewBoard), %->AMS
-        %subtract(Board, [[PointToRemove, OtherPlayer]], NewBoard), %remove a piece of the other player.
+        remove_if_not_in_mill(Player, PointToRemove, OtherPlayer, OtherPlayersPoints, Board, NewBoard), %->AMS
         report_remove( Player, PointToRemove ).                           %report remove.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Find all of the current players points that are in a mill and hence cannot be removed.%
-% This is different from a_mill_with_member_Point/3 where i found if there is a mill    %
-% point connected to the new Point the player placed a piece on or moved a piece to.    %
-% HERE AM ASSUMING THE OTHER PLAYER COULD HAVE ONE OR TWO MILLS ON THE BOARD ALREADY AND%
-% AM FINDING THOSE POINTS. THESE POINTS CANNOT BE REMOVED SINCE THEY ARE IN A MILL      %
+% Remove the merel on PointToRemove chosen by current player for the merel points of    %
+% the other player if PointToRemove is not in a mill. We cannot remove points in a mill %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-/*points_in_mill([Point|OtherPoints], OtherPlayersPoints, OtherPlayer, PointsInMill) :-
-        row(X,Y,Z),
-        member(Point,[X,Y,Z]),
-        subset([X,Y,Z], OtherPlayersPoints),
-        \+ member(PointToRemove,[X,Y,Z]),
-        %append([X,Y,Z],PointsInMill),
-        points_in_mill(OtherPoints, OtherPlayersPoints, OtherPlayer, PointsInMill).*/
-%points_in_mill(OtherPlayersPoints, OtherPlayersPoints, OtherPlayer, []). %no points in mill for the OtherPlayer
-%recursively add unique points in PointsInMill
-/*add_points_in([Head|Tail],PointsInMill) :-
-         \+ member(Head,PointsInMill),
-         append(Head,PointsInMill),
-         add_points_in(Tail,PointsInMill). */
-%
-remove_if_not_in_mill(PointToRemove, OtherPlayer, OtherPlayersPoints, Board, NewBoard) :-
-           \+ (a_mill_with_member_Point(PointToRemove, OtherPlayersPoints, ConnectedPair)), % the point to remove should not be in a mill
-          %\+ (Point_To_Remove_in_mill()), % the point to remove should not be in a mill
+remove_if_not_in_mill(Player, PointToRemove, OtherPlayer, OtherPlayersPoints, Board, NewBoard) :-
+          \+ (merel_on_board([PointToRemove, Player], Board)), % A player should not remove their own points. Is this really important?? or address this differently later
+          \+ (a_mill_with_member_Point(PointToRemove, OtherPlayersPoints, ConnectedPair)), % the point to remove should not be in a mill
           subtract(Board, [[PointToRemove, OtherPlayer]], NewBoard). %remove a piece of the other player.
-remove_if_not_in_mill(PointToRemove, OtherPlayer, OtherPlayersPoints, Board, NewBoard) :-
+remove_if_not_in_mill(Player, PointToRemove, OtherPlayer, OtherPlayersPoints, Board, NewBoard) :-
           other_player(Player, OtherPlayer),
-          %REPORT THAT YOU CAN NOT REMOVE PIECE
+          format( '\nThat piece cannot be removed. Please remove another piece.\n', [] ),%REPORT THAT YOU CAN NOT REMOVE PIECE
           get_and_remove_point(Player, Board, NewBoard).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Move a merel from OldPoint to NewPoint. %
@@ -375,7 +354,6 @@ choose_remove( Player, Point, Board ) :-
        
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %    PROBLEMS TO ADDRESS
-%1. get_and_remove_point/2 should not remove a point in a mill.
 %2. is_there_a_mill/4 and its connected_row_with_member_Point/3 needs evaluation. I need a better way of determining a mill
 %3. BUT choose_remove/3 provided by the lecturer does not account for a point in a mill.
 %4. The problem of using empty_point/2 in io is that Merel is assigned a value befor
