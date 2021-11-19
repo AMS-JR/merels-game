@@ -348,7 +348,6 @@ choose_move( Player, OldPoint, NewPoint, Board ) :-
 choose_remove( Player, Point, Board ) :-
         other_player(Player, OtherPlayer),
         points_on_board(OtherPlayer, Board, OtherPlayersPoints), %find the points of OtherPlayer on the board
-        a_relevant_piece( OtherPlayersPoints, Board, Point),
         member([PointX, PointY], OtherPlayersPoints),
         connected(PointX, PointY),
         member(Point, [PointX, PointY]),
