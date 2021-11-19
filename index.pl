@@ -47,7 +47,7 @@ merel_on_board([_Point, _Merel], []) :- false.    %Fail if Board is empty. This 
 merel_on_board([Point, Merel ], [[Point, Merel ]|_Tail]):-
              is_merel(Merel).
 merel_on_board([Point, Merel ], [[Point, _ ]|_Tail]):-
-             is_player1(Merel).
+             is_merel(Merel).
 merel_on_board([Point, Merel], [_Head|Tail]) :-
     merel_on_board([Point, Merel], Tail).
 
@@ -258,7 +258,7 @@ move_merel(Player, OldPoint, NewPoint, Board, CurrentBoard) :-
 % Running a game for 1 human and the computer@17.11.2021::07:09  %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %play/3 of placing a merel with Player 1 being the current player
-/*play(MerelsInHand, Player, Board) :-
+play(MerelsInHand, Player, Board) :-
         \+ (Player = '2'), %PLAYER_1_IS_CURRENT? IF_NOT FAIL  --- (Can i just put '1' in Arg Player?)
         \+ (MerelsInHand = 0),  %Fail, if MerelsInHand = 0 so that other play/3 predicates will execute
         get_legal_place( Player, Point, Board ),  %GET_LEGAL_PLACING( +Player, -Point, +Board)
@@ -296,7 +296,7 @@ play(0, Player, Board) :-
         check_mill(NewPoint, Player, CurrentBoard, NewBoard),  %LOOK_FOR_NEW_MILLS IF_EXISTS -> REPORT_MILL GET_AND_REMOVE_POINT
         display_board( NewBoard ),  %DISPLAY_BOARD
         play(0, '1', NewBoard). %play(MERELS_REMAINING_IN_HAND, OTHER_PLAYER, NEW_BOARD)
- */
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % check_mill/4 is for Player 2 or the computer
 % check if there is a new mill @DD.MM.YYYY::HH:MM
@@ -351,7 +351,9 @@ choose_remove( Player, Point, Board ) :-
        pair( Pair, Point, Player ),
        merel_on_board( Pair, Board ).
        
-       
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% NOTE TO SELF: AVOID USING merel_on_board/2 IN MY CODE. RATHER USE member(+list,+listOfList) %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %    PROBLEMS TO ADDRESS
 %2. is_there_a_mill/4 and its connected_row_with_member_Point/3 needs evaluation. I need a better way of determining a mill
