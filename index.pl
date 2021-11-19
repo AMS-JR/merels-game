@@ -340,16 +340,47 @@ choose_move( Player, OldPoint, NewPoint, Board ) :-
        merel_on_board( Pair, Board ),
        connected( OldPoint, NewPoint ),
        empty_point( NewPoint, Board ).
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% dumbly choose a removal. Succeeds when it can find a merel to remove.                      %
-% choose_remove/4 can have different versions, one for each heuristic @DD.MM.YYYY::HH:MM     %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-/*choose_remove(Player, Point, Board):- ALL other implementations for this should not
-allow Player 2 to remove a point in a mill and rather ask to choose another point */
-%choose_remove/4 predicate  it removes any point even those on a mill
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5%%%%%%%%%%%%%%%%%%%%%
+%   Heuristic: remove a relevant piece if opponent is about to make a mill %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Get the relevant point, if there is no such relevant point, then default to the dump choose_remove/3
+%choose_remove/4 predicate. It removes any point even those on a mill.
 choose_remove( Player, Point, Board ) :-
+        other_player(Player, OtherPlayer),
+        points_on_board(OtherPlayer, Board, OtherPlayersPoints), %find the points of OtherPlayer on the board
+        a_relevant_piece( OtherPlayersPoints, Board, Point),
+        member([PointX, PointY], OtherPlayersPoints),
+        connected(PointX, PointY),
+        member(Point, [PointX, PointY]),
+        \+ (a_mill_with_member_Point(Point, OtherPlayersPoints, ConnectedPair)).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% dumbly choose a removal. Succeeds when it can find a merel to remove.     %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+choose_remove( Player, Point, Board ) :- %CHECK THIS AGAIN, IT SEEMS LIKE Player should be passed OtherPlayer ->AMS
        pair( Pair, Point, Player ),
        merel_on_board( Pair, Board ).
+
+%%%%%%%%%%%%%%%%%%%%%%
+% Get and remove a piece of the Other player
+%%%%%%%%%%%%%%%%%%%%%%%
+get_and_remove_point(Player, Board, NewBoard) :-
+        get_remove_point( Player, PointToRemove, Board),
+        other_player(Player, OtherPlayer),
+        points_on_board(OtherPlayer, Board, OtherPlayersPoints), %find the points of OtherPlayer on the board
+        remove_if_not_in_mill(Player, PointToRemove, OtherPlayer, OtherPlayersPoints, Board, NewBoard), %->AMS
+        report_remove( Player, PointToRemove ).                           %report remove.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Remove the merel on PointToRemove chosen by current player for the merel points of    %
+% the other player if PointToRemove is not in a mill. We cannot remove points in a mill %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+remove_if_not_in_mill(Player, PointToRemove, OtherPlayer, OtherPlayersPoints, Board, NewBoard) :-
+          \+ (member([PointToRemove, Player], Board)), % A player should not remove their own points. Is this really important?? or address this differently later
+          \+ (a_mill_with_member_Point(PointToRemove, OtherPlayersPoints, _ConnectedPair)), % the point to remove should not be in a mill
+          subtract(Board, [[PointToRemove, OtherPlayer]], NewBoard). %remove a piece of the other player.
+remove_if_not_in_mill(Player, _PointToRemove, OtherPlayer, _OtherPlayersPoints, Board, NewBoard) :-
+          other_player(Player, OtherPlayer),
+          format( '\nThat piece cannot be removed. Please remove another piece.\n', [] ),%REPORT THAT YOU CAN NOT REMOVE PIECE
+          get_and_remove_point(Player, Board, NewBoard).
        
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % NOTE TO SELF: AVOID USING merel_on_board/2 IN MY CODE. RATHER USE member(+list,+listOfList) %
