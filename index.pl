@@ -80,21 +80,21 @@ row(c, o, x ).
 connected(Point1, Point2) :-
     Point1 \== Point2,
     row(X, Y, Z),
-    member(Point1, [X, Y, Z]),
-    member(Point2, [X, Y, Z]),
+    %member(Point1, [X, Y, Z]),  %removing these
+    %member(Point2, [X, Y, Z]),  % makes no difference to the response
     nextto(Point1, Point2, [X, Y, Z]).
 connected(Point1, Point2) :-
     Point1 \== Point2,
     row(X, Y, Z),
-    member(Point1, [X, Y, Z]),
-    member(Point2, [X, Y, Z]),
+    %member(Point1, [X, Y, Z]),   %removing these
+    %member(Point2, [X, Y, Z]),   % makes no difference to the response
     nextto(Point2, Point1, [X, Y, Z]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                                    iniatial state of the board                                                        %
 % I will assumme it is empty at all times( a new game between players), and not empty only for testing other predicates %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%initial_board(Board).
+%initial_board(_Board).
  initial_board([]).               %board for the play/3 predicate between two players.
 %initial_board([[a, '1'],[b, '1'],[d, '1'],[u, '2'],[v, '2']]).   %board for and_the_winner_is/2 predicate 1
 %initial_board([[o, '1'],[w, '1'],[n, '1'],[t, '1'],[j, '1'],[x, '2'],[u, '2'],[v, '2']]).   %board for and_the_winner_is/2 predicate 2
