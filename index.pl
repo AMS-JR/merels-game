@@ -309,23 +309,63 @@ check_mill(Point, Player, Board, NewBoard) :-
        a_mill_with_member_Point(Point, CurrentPlayersPoints, _ConnectedPair), % a connected row in the current players points with Point as a member
        report_mill( Player ),      %reporting the new mill
        display_board( Board ),  %DISPLAY_BOARD so current player can easily make a choice on what piece to remove
-       choose_remove(Player, PointToRemove, Board), %Choose a point to remove on the Board
+       other_player(Player, OtherPlayer),
+       choose_remove(OtherPlayer, PointToRemove, Board), %Choose a point of the OtherPlayer to remove on the Board
        subtract(Board, [[PointToRemove, '1']], NewBoard), %remove a piece of the other player.
        report_remove( Player, PointToRemove ). %report the point removed
        
 check_mill(_Point, _Player, Board, Board).    %If first check_mill/4 predicate fails, call this to unify CurrentBoard and NewBoard in play/3.
+%%%%%%%%%%%%%%%%%%%%
+%   HEURISTICS     %
+%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%  Succeeds when it can find a place to put a new merel to form a MILL or defend againt a mill by opponent %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+/* Choose a place where a mill will be formed if a merel is place there.... Playing Offensive */
+choose_place( Player, Point, Board ) :-
+        points_on_board(Player, Board, PlayersPoints), %find the points of OtherPlayer on the board,
+        member(PointX, PlayersPoints),    %Randomly pick a point, we have a choice pointer here,
+        member(PointY, PlayersPoints),    %Randomly pick another point, we have a choice pointer here,
+        \+ (PointX = PointY),             %The points have to be different,
+        relevant_point(PointX, PointY, Point). % That relevant point to place a merel in order to make a mill
+/* Choose a place which is empty and together with two other connecting places, the opponent can form a mill .... Playing defensive.*/
+choose_place( _Player, Point, Board ) :-
+        other_player(Player, OtherPlayer),
+        points_on_board(OtherPlayer, Board, OtherPlayersPoints), %find the points of OtherPlayer on the board
+        member(PointX, OtherPlayersPoints),    %Randomly pick a point, we have a choice pointer here,
+        member(PointY, OtherPlayersPoints),    %Randomly pick another point, we have a choice pointer here,
+        \+ (PointX = PointY),             %The points have to be different,
+        relevant_point(PointX, PointY, Point).
+%CASE: ...Place pieces on points with many connections
+/*choose_place( _Player, Point, Board ) :- TODO??*/
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % dumbly choose a point. Succeeds when it can find a place to put a new merel.          %
-% choose_place/3 can have different versions, one for each heuristic @DD.MM.YYYY::HH:MM %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-/*choose_place( _Player, Point, Board ) :- TODO??*/
-/*choose_place( _Player, Point, Board ) :- TODO??*/
-/*choose_place( _Player, Point, Board ) :- TODO??*/
-/*choose_place( _Player, Point, Board ) :- TODO??*/
-%The last choose_place/3 predicate. _Player = Player, only that we say it appears only once by adding _
 choose_place( _Player, Point, Board ) :-
          connected( Point, _ ),
          empty_point( Point, Board ).
+%CASE: when two points are connected and one of those points is connected to a third empty point such that
+%together all these three points can make a mill because they are a connected row.
+ relevant_point(PointX, PointY, Point) :-
+        connected(PointX, PointY),        %the two points have to be connected,
+        member(PointZ, [PointX, PointY]), %Picking one point at a time, we have a choice pointer here
+        connected(PointZ, Point),         %Find a connected point for our chosen Point, we have a choice pointer here
+        empty_point(Point, Board),        %If our chosen Point is empty, then we can choose this place.
+        can_make_mill([PointX,PointY,Point], Board).  %the points are in no particular order
+%CASE: when two points are not connected, but have a middle empty point connecting them and
+%together all these three points can make a mill because they are a connected row.
+ relevant_point(PointX, PointY, Point)  :-
+        connected(PointX, Point),     %PointX is connected to some Point,
+        connected(Point, PointY),     %PointY is connected to that same Point as well,
+        empty_point(Point, Board),        %If our chosen Point is empty,
+        can_make_mill([PointX,PointY,Point], Board).  %the points are in no particular order
+
+%Check if any given three points can make a mill, in no particular order
+can_make_mill([Point1,Point2,Point3], Board) :-               %the points are in no particular order
+         row(X,Y,Z),
+         member(X,[Point1,Point2,Point3]),
+         member(Y,[Point1,Point2,Point3]),
+         member(Z,[Point1,Point2,Point3]).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % dumbly choose a move. Succeeds when it can find a merel to move and a place to move it to. %
 % choose_move/3 can have different versions, one for each heuristic @DD.MM.YYYY::HH:MM       %
@@ -340,22 +380,29 @@ choose_move( Player, OldPoint, NewPoint, Board ) :-
        merel_on_board( Pair, Board ),
        connected( OldPoint, NewPoint ),
        empty_point( NewPoint, Board ).
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5%%%%%%%%%%%%%%%%%%%%%
-%   Heuristic: remove a relevant piece if opponent is about to make a mill %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%Get the relevant point, if there is no such relevant point, then default to the dump choose_remove/3
-%choose_remove/4 predicate. It removes any point even those on a mill.
-choose_remove( Player, Point, Board ) :-
-        other_player(Player, OtherPlayer),
-        points_on_board(OtherPlayer, Board, OtherPlayersPoints), %find the points of OtherPlayer on the board
-        member([PointX, PointY], OtherPlayersPoints),
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5%%%%%%%%%%%%%%%%%%%%%%%%%
+%       remove a relevant piece if opponent is about to make a mill            %
+% if there is no such relevant piece, then default to the dump choose_remove/3 %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%CASE: when two points are connected and one of those points is connected to a third empty point such that
+%together all these three points can make a mill because they are a connected row.
+choose_remove( Player, Point, Board ) :-  % note, Player here is the other player. Calling predicate passes OtherPlayer to Player
+        points_on_board(Player, Board, OtherPlayersPoints), %find the points of OtherPlayer on the board
+        member(PointX, OtherPlayersPoints),
+        member(PointY, OtherPlayersPoints),
+        \+ (PointX = PointY),
         connected(PointX, PointY),
-        member(Point, [PointX, PointY]),
-        \+ (a_mill_with_member_Point(Point, OtherPlayersPoints, ConnectedPair)).
+        member(Point, [PointX, PointY]),  % Picking one point at a time, we have a choice pointer here
+        connected(Point, PointZ),          % Find a connected point for our chosen Point, we have a choice pointer here
+        empty_point( PointZ, Board ),      % if that connected point is empty
+        can_make_mill([PointX,PointY,PointZ], Board).
+%CASE: when two points are not connected, but have a middle empty point connecting them and
+%together all these three points can make a mill because they are a connected row.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % dumbly choose a removal. Succeeds when it can find a merel to remove.     %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-choose_remove( Player, Point, Board ) :- %CHECK THIS AGAIN, IT SEEMS LIKE Player should be passed OtherPlayer ->AMS
+choose_remove( Player, Point, Board ) :- %CHECK THIS AGAIN, IT SEEMS LIKE Player should be passed OtherPlayer otherwise, play 2 can remove its own points ->AMS
        pair( Pair, Point, Player ),
        merel_on_board( Pair, Board ).
        
