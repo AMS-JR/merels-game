@@ -428,18 +428,6 @@ relevant_point_to_remove(PointX, PointY, Point, Board):-
         empty_point( SomePoint, Board ),      % if that connected point is empty
         can_make_mill([PointX,PointY,SomePoint]),
         member(Point, [PointX, PointY]).  % We can pick any point, we have a choice pointer here
-        
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% NOTE TO SELF: AVOID USING merel_on_board/2 IN MY CODE. RATHER USE member(+list,+listOfList) %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%    PROBLEMS TO ADDRESS
-%2. is_there_a_mill/4 and its connected_row_with_member_Point/3 needs evaluation. I need a better way of determining a mill
-%3. BUT choose_remove/3 provided by the lecturer does not account for a point in a mill.
-%4. The problem of using empty_point/2 in io is that Merel is assigned a value befor
-%   calling merel_on_board/2, i.e., it test for that Player only before backtracking to
-%   test for other PLayer. But what we want is to call merel_on_board/2 with an
-%   anonymous variable for the Player so that it only looks for a case where one is true
-%   and returns immediatedly if one succeeds. no need to backtrack
-%5. is_point/1 is probably not neccessary and should be remove
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%END!
+%Author: Amadou Sarjo Jallow.
