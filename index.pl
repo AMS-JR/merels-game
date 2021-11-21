@@ -1,5 +1,9 @@
 :- use_module([library(lists), io ]).
 
+/*
+ This code can be found on the Github repository https://github.com/AMS-JR/merels-game which is now private.
+ Please note that this is my code and the repository is also mine.
+*/
 %%%%%%%%%%%%%%%%
 %    Players   %
 %%%%%%%%%%%%%%%%
@@ -98,15 +102,14 @@ connected(Point1, Point2) :-
 % I will assumme it is empty at all times( a new game between players), and not empty only for testing other predicates %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %initial_board(_Board).
- initial_board([]).               %board for the play/3 predicate between two players.
+initial_board([]).               %board for the play/3 predicate between two players.
 %initial_board([[a, '1'],[b, '1'],[d, '1'],[u, '2'],[v, '2']]).   %board for and_the_winner_is/2 predicate 1
 %initial_board([[o, '1'],[w, '1'],[n, '1'],[t, '1'],[j, '1'],[x, '2'],[u, '2'],[v, '2']]).   %board for and_the_winner_is/2 predicate 2
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                     emty board                           %
 % am using initial_board/1 here since it makes life easier %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-initial_board([]).  %an empty board is an initial_board/1 with and empty [] as Argument
+%initial_board([]).  %an empty board is an initial_board/1 with and empty [] as Argument
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % deciding the winner @16.11.2021::19:49%
@@ -174,9 +177,9 @@ play :- welcome,
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %All merels have been placed.
 play(0, _Player, Board) :-
-         and_the_winner_is(Board, Winner), %board represents a winning state
-         display_board( Board ),  %DISPLAY_BOARD
-         report_winner( Winner ).%REPORT_WINNER
+         and_the_winner_is(Board, _Winner). %board represents a winning state
+         %display_board( Board ),  %DISPLAY_BOARD
+         %report_winner( Winner ).%REPORT_WINNER
 %Not all merels have been placed.
 /*code for section 3.6 @16.11.2021::19:49  */
 /*play(MerelsInHand, Player, Board) :-
@@ -258,7 +261,7 @@ move_merel(Player, OldPoint, NewPoint, Board, CurrentBoard) :-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %play/3 of placing a merel with Player 1 being the current player
 play(MerelsInHand, Player, Board) :-
-        \+ (Player = '2'), %PLAYER_1_IS_CURRENT? IF_NOT FAIL  --- (Can i just put '1' in Arg Player?)
+        \+ (Player = '2'), %PLAYER_1_IS_CURRENT? IF_NOT FAIL,
         \+ (MerelsInHand = 0),  %Fail, if MerelsInHand = 0 so that other play/3 predicates will execute
         get_legal_place( Player, Point, Board ),  %GET_LEGAL_PLACING( +Player, -Point, +Board)
         append([[Point, Player]], Board, CurrentBoard), %ADD_THE_NEW_PAIR_IN_THE_BOARD
@@ -269,7 +272,7 @@ play(MerelsInHand, Player, Board) :-
         play(MerelsRemainingInHand , '2', NewBoard). %play(MERELS_REMAINING_IN_HAND, OTHER_PLAYER, NEW_BOARD)
 %play/3 of placing a merel with Player 2 being the current player
 play(MerelsInHand, Player, Board) :-
-        \+ (Player = '1'),    %PLAYER_2_IS_CURRENT? IF_NOT FAIL  --- (Can i just put '2' in Arg Player?),
+        \+ (Player = '1'),    %PLAYER_2_IS_CURRENT? IF_NOT FAIL,
         \+ (MerelsInHand = 0),  %Fail, if MerelsInHand = 0 so that other play/3 predicates will execute,
         choose_place( Player, Point, Board ), %GET_LEGAL_PLACING( +Player, -Point, +Board), _Player = Player, only that we say it appears only once by adding _
         append([[Point, Player]], Board, CurrentBoard),  %ADD_NEW_PAIR_ON_THE_BOARD,
@@ -322,7 +325,7 @@ check_mill(_Point, _Player, Board, Board).    %If first check_mill/4 predicate f
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 /* Choose a place where a mill will be formed if a merel is place there.... Playing Offensive */
 choose_place( Player, Point, Board ) :-
-        points_on_board(Player, Board, PlayersPoints), %find the points of OtherPlayer on the board,
+        points_on_board(Player, Board, PlayersPoints), %find the points of Current Player on the board,
         member(PointX, PlayersPoints),    %Randomly pick a point, we have a choice pointer here,
         member(PointY, PlayersPoints),    %Randomly pick another point, we have a choice pointer here,
         \+ (PointX = PointY),             %The points have to be different,
@@ -335,7 +338,8 @@ choose_place( Player, Point, Board ) :-
         member(PointY, OtherPlayersPoints),    %Randomly pick another point, we have a choice pointer here,
         \+ (PointX = PointY),             %The points have to be different,
         relevant_point(PointX, PointY, Point, Board).     %Point to place Piece.
-%CASE: ...Place pieces on points with many connections
+
+/*CASE: ...Place pieces on points with many connections*/
 /*choose_place( _Player, Point, Board ) :- TODO??*/
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % dumbly choose a point. Succeeds when it can find a place to put a new merel.          %
@@ -343,40 +347,58 @@ choose_place( Player, Point, Board ) :-
 choose_place( _Player, Point, Board ) :-
          connected( Point, _ ),
          empty_point( Point, Board ).
-%CASE: when two points are connected and one of those points is connected to a third empty Point such that
-%together all these three points can make a mill because they are a connected row.
+/*CASE: when two points are connected and one of those points is connected to a third empty Point such that
+ together all these three points can make a mill because they are a connected row.*/
  relevant_point(PointX, PointY, Point, Board) :-
         connected(PointX, PointY),        %the two points have to be connected,
         member(PointZ, [PointX, PointY]), %Picking one point at a time, we have a choice pointer here
         connected(PointZ, Point),         %Find a connected point for our chosen Point, we have a choice pointer here
         empty_point(Point, Board),        %If our chosen Point is empty, then we can choose this place.
-        can_make_mill([PointX,PointY,Point], Board).  %the points are in no particular order
-%CASE: when two points are not connected, but have a middle empty Point connecting them and
-%together all these three points can make a mill because they are a connected row.
+        can_make_mill([PointX,PointY,Point]).  %the points are in no particular order
+/*CASE: when two points are not connected, but have a middle empty Point connecting them and
+ together all these three points can make a mill because they are a connected row.*/
  relevant_point(PointX, PointY, Point, Board)  :-
         connected(PointX, Point),     %PointX is connected to some Point,
         connected(Point, PointY),     %PointY is connected to that same Point as well,
         empty_point(Point, Board),        %If our chosen Point is empty,
-        can_make_mill([PointX,PointY,Point], Board).  %the points are in no particular order
+        can_make_mill([PointX,PointY,Point]).  %the points are in no particular order
 
 %Check if any given three points can make a mill, in no particular order
-can_make_mill([Point1,Point2,Point3], Board) :-               %the points are in no particular order
+can_make_mill([Point1,Point2,Point3]) :-               %the points are in no particular order
          row(X,Y,Z),
          member(X,[Point1,Point2,Point3]),
          member(Y,[Point1,Point2,Point3]),
          member(Z,[Point1,Point2,Point3]).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Succeeds when it can find a place to put a new merel to form a MILL or defend againt a mill by opponent %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+/* Choose a place where a mill will be formed if a merel is moved there.... Playing Offensive */
+choose_move( Player, OldPoint, NewPoint, Board ):-
+          points_on_board(Player, Board, PlayersPoints), %find the points of Current Player on the board,
+          member(OldPoint, PlayersPoints),
+          connected(OldPoint, NewPoint),
+          empty_point(NewPoint, Board),
+          member(PointX,PlayersPoints), \+ (PointX = OldPoint),
+          member(PointY,PlayersPoints), \+ (PointY = OldPoint), \+(PointY = PointX),
+          can_make_mill([NewPoint,PointX,PointY]).
+/* Choose a place which is empty and together with two other connecting places in row, the opponent can form a mill .... Playing defensive.*/
+choose_move( Player, OldPoint, NewPoint, Board ):-
+          other_player(Player, OtherPlayer),
+          points_on_board(OtherPlayer, Board, OtherPlayersPoints), %find the points of OtherPlayer on the board
+          member(PointX, OtherPlayersPoints),    %Randomly pick a point, we have a choice pointer here,
+          member(PointY, OtherPlayersPoints),    %Randomly pick another point, we have a choice pointer here,
+          \+ (PointX = PointY),             %The points have to be different,
+          relevant_point(PointX, PointY, NewPoint, Board),     %Point to move a Piece.
+          points_on_board(Player, Board, PlayersPoints), %find the points of Current Player on the board,
+          member(OldPoint, PlayersPoints),
+          connected(OldPoint, NewPoint).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % dumbly choose a move. Succeeds when it can find a merel to move and a place to move it to. %
-% choose_move/3 can have different versions, one for each heuristic @DD.MM.YYYY::HH:MM       %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-/*choose_move( Player, OldPoint, NewPoint, Board ):- TODO??*/
-/*choose_move( Player, OldPoint, NewPoint, Board ):- TODO??*/
-/*choose_move( Player, OldPoint, NewPoint, Board ):- TODO??*/
-/*choose_move( Player, OldPoint, NewPoint, Board ):- TODO??*/
 %The last choose_move/4 predicate.
 choose_move( Player, OldPoint, NewPoint, Board ) :-
        pair( Pair, OldPoint, Player ),
-       %merel_on_board( Pair, Board ),  /*Because of the way empty_point/2 calls merel_on_board/2, i won't be using it and only empty point calls it*/
+       %merel_on_board( Pair, Board ),  /*Because of the way empty_point/2 calls merel_on_board/2, i won't be using it and only empty_point/2 calls it*/
        member( Pair, Board ),
        connected( OldPoint, NewPoint ),
        empty_point( NewPoint, Board ).
@@ -405,7 +427,7 @@ relevant_point_to_remove(PointX, PointY, Point, Board):-
         member(Point, [PointX, PointY]),  % Picking one point at a time, we have a choice pointer here
         connected(Point, PointZ),          % Find a connected point for our chosen Point, we have a choice pointer here
         empty_point( PointZ, Board ),      % if that connected point is empty
-        can_make_mill([PointX,PointY,PointZ], Board).
+        can_make_mill([PointX,PointY,PointZ]).
 /*CASE: when two points are not connected, but have a middle empty point connecting them and
 together all these three points can make a mill because they are a connected row.We can choose to
 remove any of the other points i.e., first or last point in the row */
@@ -413,7 +435,7 @@ relevant_point_to_remove(PointX, PointY, Point, Board):-
         connected(PointX, SomePoint),     %PointX is connected to some Point,
         connected(SomePoint, PointY),     %PointY is connected to that same Point as well,
         empty_point( SomePoint, Board ),      % if that connected point is empty
-        can_make_mill([PointX,PointY,SomePoint], Board),
+        can_make_mill([PointX,PointY,SomePoint]),
         member(Point, [PointX, PointY]).  % We can pick any point, we have a choice pointer here
         
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
