@@ -28,13 +28,11 @@ is_merel(Player) :- is_player2(Player).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 other_player(FirstPlayer, SecondPlayer) :-
                             is_player1(FirstPlayer),
-                            is_player2(SecondPlayer),
-                            FirstPlayer \== SecondPlayer.
+                            is_player2(SecondPlayer).
 
 other_player(FirstPlayer, SecondPlayer) :-
                             is_player1(SecondPlayer),
-                            is_player2(FirstPlayer),
-                            FirstPlayer \== SecondPlayer.
+                            is_player2(FirstPlayer).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Check if a pair is valid and can exist in the game  %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -137,13 +135,6 @@ is_opponent_reduced_to_two_merels_by(Board, Winner) :-
                 other_player(Winner, SecondPlayer),
                 findall(Point, member([Point, SecondPlayer], Board),Secondpoints),
                 length(Secondpoints, LengthofPlayer2), LengthofPlayer2 < 3.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Find all the points on the board for the current player                         %
-% is same function for points_on_board() and should return the                    %
-% same result. I need to confirm it won't break my code. points_on_board/3 is     %
-% actualy way more easier and straigtforward since it is using member/2.          %
-% I can replace both findall here with points_on_board/3                          %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % checking if there is no legal move for each OldPoint i.e., if all legal moves have merels on the board. If they all have merels, %
 % then Current player has no moves to make and has lost the game but if this fails, then current player has not lost the game yet. %
