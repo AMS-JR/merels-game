@@ -35,8 +35,10 @@ other_player(FirstPlayer, SecondPlayer) :-
 % Check if a pair is valid and can exist in the game  %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %all pair does is pair Point in Arg2 and Merel in Arg3 into Arg1
-pair([Point, Merel], Point, Merel) :- is_point(Point), %check if point is a valid point.
-                                      is_merel(Merel). %all pair does is pair Point in Arg2 and Merel in Arg3 into Arg1
+/*pair([Point, Merel], Point, Merel) :- is_point(Point), %check if point is a valid point.
+                                      is_merel(Merel).*/
+pair([Point, Merel], Point, Merel) :-
+              is_merel(Merel).
 %MIGHT BE EASIER JUST USING pair([Point, Merel], Point, Merel). REVIEW LATER->AMS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % position of the merel on the board       %
@@ -81,13 +83,11 @@ row(c, o, x ).
 % check if two points on the board are connected %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 connected(Point1, Point2) :-
-    Point1 \== Point2,
     row(X, Y, Z),
     %member(Point1, [X, Y, Z]),  %removing these
     %member(Point2, [X, Y, Z]),  % makes no difference to the result
     nextto(Point1, Point2, [X, Y, Z]).
 connected(Point1, Point2) :-
-    Point1 \== Point2,
     row(X, Y, Z),
     %member(Point1, [X, Y, Z]),   %removing these
     %member(Point2, [X, Y, Z]),   % makes no difference to the result
@@ -168,7 +168,7 @@ play :- welcome,
         initial_board( Board ),
         display_board( Board ),
         is_player1( Player ),
-        play( 18, Player, Board ).
+        play( 10, Player, Board ).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % play/3 possible predicates %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -232,20 +232,19 @@ a_mill_with_member_Point(Point, CurrentPlayersPoints, ConnectedPair) :-
 %%%%%%%%%%%%%%%%%%%%%%%
 get_and_remove_point(Player, Board, NewBoard) :-
         get_remove_point( Player, PointToRemove, Board),
-        other_player(Player, OtherPlayer),
-        points_on_board(OtherPlayer, Board, OtherPlayersPoints), %find the points of OtherPlayer on the board
-        remove_if_not_in_mill(Player, PointToRemove, OtherPlayer, OtherPlayersPoints, Board, NewBoard), %->AMS
+        remove_if_not_in_mill(Player, PointToRemove, Board, NewBoard), %->AMS
         report_remove( Player, PointToRemove ).                           %report remove.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Remove the merel on PointToRemove chosen by current player for the merel points of    %
 % the other player if PointToRemove is not in a mill. We cannot remove points in a mill %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-remove_if_not_in_mill(Player, PointToRemove, OtherPlayer, OtherPlayersPoints, Board, NewBoard) :-
+remove_if_not_in_mill(Player, PointToRemove, Board, NewBoard) :-
+          other_player(Player, OtherPlayer),
+          points_on_board(OtherPlayer, Board, OtherPlayersPoints), %find the points of OtherPlayer on the board
           \+ (member([PointToRemove, Player], Board)), % A player should not remove their own points. Is this really important?? or address this differently later
           \+ (a_mill_with_member_Point(PointToRemove, OtherPlayersPoints, _ConnectedPair)), % the point to remove should not be in a mill
           subtract(Board, [[PointToRemove, OtherPlayer]], NewBoard). %remove a piece of the other player.
-remove_if_not_in_mill(Player, _PointToRemove, OtherPlayer, _OtherPlayersPoints, Board, NewBoard) :-
-          other_player(Player, OtherPlayer),
+remove_if_not_in_mill(Player, _PointToRemove, Board, NewBoard) :-
           format( '\nThat piece cannot be removed. Please remove another piece.\n', [] ),%REPORT THAT YOU CAN NOT REMOVE PIECE
           get_and_remove_point(Player, Board, NewBoard).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -377,7 +376,8 @@ can_make_mill([Point1,Point2,Point3], Board) :-               %the points are in
 %The last choose_move/4 predicate.
 choose_move( Player, OldPoint, NewPoint, Board ) :-
        pair( Pair, OldPoint, Player ),
-       merel_on_board( Pair, Board ),
+       %merel_on_board( Pair, Board ),  /*Because of the way empty_point/2 calls merel_on_board/2, i won't be using it and only empty point calls it*/
+       member( Pair, Board ),
        connected( OldPoint, NewPoint ),
        empty_point( NewPoint, Board ).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -391,6 +391,12 @@ choose_remove( Player, Point, Board ) :-  % note, Player here is the other playe
         member(PointY, OtherPlayersPoints),  %Randomly pick another point, we have a choice pointer here,
         \+ (PointX = PointY),     %The points have to be different,
         relevant_point_to_remove(PointX, PointY, Point, Board).  %point to remove
+/*dumbly choose a removal. Succeeds when it can find a merel to remove.*/
+choose_remove( Player, Point, Board ) :-
+       pair( Pair, Point, Player ),
+       %merel_on_board( Pair, Board ).
+       member( Pair, Board ).
+       
 /*CASE: when two points are connected and one of those points is connected to a third empty point such that
 together all these three points can make a mill because they are a connected row. We choose to remove the
 point directly connected to the empty point*/
@@ -409,13 +415,7 @@ relevant_point_to_remove(PointX, PointY, Point, Board):-
         empty_point( SomePoint, Board ),      % if that connected point is empty
         can_make_mill([PointX,PointY,SomePoint], Board),
         member(Point, [PointX, PointY]).  % We can pick any point, we have a choice pointer here
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% dumbly choose a removal. Succeeds when it can find a merel to remove.     %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-choose_remove( Player, Point, Board ) :-
-       pair( Pair, Point, Player ),
-       merel_on_board( Pair, Board ).
-       
+        
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % NOTE TO SELF: AVOID USING merel_on_board/2 IN MY CODE. RATHER USE member(+list,+listOfList) %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
