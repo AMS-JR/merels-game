@@ -429,5 +429,14 @@ relevant_point_to_remove(PointX, PointY, Point, Board):-
         can_make_mill([PointX,PointY,SomePoint]),
         member(Point, [PointX, PointY]).  % We can pick any point, we have a choice pointer here
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%   TESTING and_the_winner_is(Board, Winner) on Terminal       %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Opponent is reduced to two merels.
+%and_the_winner_is([[a, '1'],[b, '1'],[d, '1'],[u, '2'],[v, '2']], Winner).        %board for and_the_winner_is/2 predicate 1
+%and_the_winner_is([[a, '1'],[b, '1'],[d, '2'],[u, '2'],[v, '2']], Winner).        %board for and_the_winner_is/2 predicate 1
+%Opponent is boxed in and has no legal move
+%and_the_winner_is([[o, '1'],[w, '1'],[n, '1'],[t, '1'],[j, '1'],[x, '2'],[u, '2'],[v, '2']], Winner).        %board for and_the_winner_is/2 predicate 2
+
 %END!
 %Author: Amadou Sarjo Jallow.
